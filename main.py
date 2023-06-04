@@ -1,7 +1,35 @@
 import cv2
 import numpy as np
 from sklearn.cluster import KMeans
+import webcolors
 
+def rgb_to_color_name(rgb):
+    try:
+        return webcolors.rgb_to_name(rgb)
+    except ValueError:
+        # Fallback to color distance-based lookup
+        colors = webcolors.HTML4_NAMES_TO_HEX
+        color_names = list(colors.keys())
+        color_values = np.array([webcolors.hex_to_rgb(color) for color in colors.values()])
+
+        # Convert the RGB value to a NumPy array
+        rgb_array = np.array(rgb)
+
+        # Calculate color distances
+
+        distances = np.sqrt(np.sum((color_values - rgb_array)**2, axis=1))
+
+        # Find the closest color
+        closest_index = np.argmin(distances)
+        closest_color_name = color_names[closest_index]
+
+        # Set a threshold for similarity
+        threshold = 100  # Adjust this value based on your preference
+
+        if distances[closest_index] <= threshold:
+            return closest_color_name
+        else:
+            return 'Unknown'
 
 def get_main_object_color(image_path, num_colors=3):
     # Load the image
@@ -28,14 +56,15 @@ def get_main_object_color(image_path, num_colors=3):
     # Find the most dominant color associated with the main label
     main_color = colors[main_label]
 
-    return main_color.astype(int)
+    # Convert the color values to integers
+    main_color_int = tuple(main_color.astype(int))
 
+    return main_color_int
 
 # Example usage
-
-
 print('Insert Image Path: ')
-path = input()
-image_path = 'a2.jpg'
-main_object_color = get_main_object_color(path)
-print('Main object color: RGB', main_object_color)
+image_path = input()
+main_object_color = get_main_object_color(image_path)
+color_name = rgb_to_color_name(main_object_color)
+print('Main object color: RGB', str(main_object_color))
+print('Color Name:', color_name)
